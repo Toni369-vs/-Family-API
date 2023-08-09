@@ -25,20 +25,57 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/members', methods=['GET'])
-def handle_hello():
+# ENDPOINT PARA VER TODOS MIEMBRO
 
-    # this is how you can use the Family datastructure by calling its methods
+@app.route('/members', methods=['GET'])
+def getAllMembers():
     members = jackson_family.get_all_members()
-    response_body = {
-        "hello": "world",
-        "family": members
+    if members:
+        return jsonify(members), 200
+    else:
+        return jsonify("Ha ocurrido un error"), 400
+
+
+ # ENDPOINT PARA VER UN MIEMBRO
+@app.route("/member/<int:id>", methods=["GET"])
+def getOneMember(id):
+    member = jackson_family.get_member(id)
+
+    if member == "No existe miembro":
+        return jsonify("Ha ocurrido un error"), 400
+
+    return jsonify(member), 200
+
+# ENDPOINT PARA AGREGAR UN MIEMBRO
+@app.route('/member', methods=['POST'])
+def addMember():
+ 
+    member = {
+        "id": request.json.get("id"),
+        "first_name": request.json.get("first_name"),
+        "age": request.json.get("age"),
+        "lucky_numbers": request.json.get("lucky_numbers")
     }
 
+    response = jackson_family.add_member(member)
+    if (response == True):
+        return jsonify("Usuario creado"), 200
+    else:
+        return jsonify("Ocurrió un error al agregar el miembro de la familia"), 400
 
-    return jsonify(response_body), 200
 
-# this only runs if `$ python src/app.py` is executed
+# ENDPOINT PARA ELIMINAR UN MIEMBRO
+@app.route('/member/<int:id>', methods=['DELETE'])
+def deleteOneMember(id):
+    estado = jackson_family.delete_member(id)
+
+    if estado == True:
+        return jsonify({"done": True}), 200
+    else:
+        return jsonify("Ocurrió un error al eliminar el miembro"), 400
+
+
+
 if __name__ == '__main__':
-    PORT = int(os.environ.get('PORT', 3000))
+    PORT = int(os.environ.get('PORT', 4000))
     app.run(host='0.0.0.0', port=PORT, debug=True)
